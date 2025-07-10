@@ -40,13 +40,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <h1 className="text-4xl font-bold mb-6 text-center">Mora Bets - Today's Props</h1>
-
       <SearchBar
-        value={query}
-        onChange={setQuery}
-        suggestions={players}
+        query={query}
+        setQuery={setQuery}
         selectedTeam={selectedTeam}
-        onTeamChange={setSelectedTeam}
+        setSelectedTeam={setSelectedTeam}
         onSearch={fetchPlayers}
       />
 
