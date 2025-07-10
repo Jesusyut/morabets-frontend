@@ -1,26 +1,13 @@
 // src/components/SearchBar.jsx
-import { useState, useEffect, useRef } from 'react';
+import { useRef } from 'react';
 
 const teams = [
-  "ATL", "LAD", "NYY", "BOS", "TOR", "CHC", "HOU", "TEX", "PHI", "SD", // add more as needed
+  "ATL", "LAD", "NYY", "BOS", "TOR", "CHC", "HOU", "TEX", "PHI", "SD"
+  // Add more as needed
 ];
 
 export default function SearchBar({ query, setQuery, selectedTeam, setSelectedTeam, onSearch }) {
-  const [suggestions, setSuggestions] = useState([]);
   const recognitionRef = useRef(null);
-
-  useEffect(() => {
-    if (!query) {
-      setSuggestions([]);
-      return;
-    }
-
-    // Simulate suggestions from local list or fetched props
-    const terms = [query, selectedTeam]; // Extend this with actual logic if needed
-    setSuggestions(
-      terms.filter(Boolean).slice(0, 5)
-    );
-  }, [query, selectedTeam]);
 
   const handleVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window)) {
@@ -35,7 +22,7 @@ export default function SearchBar({ query, setQuery, selectedTeam, setSelectedTe
     recognitionRef.current.onresult = (event) => {
       const speech = event.results[0][0].transcript;
       setQuery(speech);
-      onSearch(speech, selectedTeam);
+      onSearch(); // Trigger search with updated query
     };
   };
 
@@ -45,8 +32,8 @@ export default function SearchBar({ query, setQuery, selectedTeam, setSelectedTe
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && onSearch(query, selectedTeam)}
-        placeholder="Search player..."
+        onKeyDown={(e) => e.key === 'Enter' && onSearch()}
+        placeholder="Search player, team, or opponent..."
         className="bg-gray-800 text-white px-4 py-2 rounded-md w-64 focus:ring-2 focus:ring-green-400"
       />
 
@@ -62,7 +49,7 @@ export default function SearchBar({ query, setQuery, selectedTeam, setSelectedTe
       </select>
 
       <button
-        onClick={() => onSearch(query, selectedTeam)}
+        onClick={onSearch}
         className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
       >
         Search
