@@ -5,62 +5,59 @@ export default function App() {
   const [players, setPlayers] = useState([]);
   const [query, setQuery] = useState('');
   const [selectedTeam, setSelectedTeam] = useState('');
-  const [onlyHighProb, setOnlyHighProb] = useState(false);
+  const [show60Plus, setShow60Plus] = useState(false);
 
   useEffect(() => {
-    fetch('https://morabets-backend.onrender.com/api/players')
-      .then(res => res.json())
-      .then(data => setPlayers(data))
-      .catch(err => console.error('Error fetching players:', err));
+    // Initial load
+    fetchPlayers();
   }, []);
 
-  const filteredPlayers = players
-    .filter(p => {
-      const matchesQuery =
-        query === '' ||
-        p.player.toLowerCase().includes(query.toLowerCase()) ||
-        p.team?.toLowerCase().includes(query.toLowerCase()) ||
-        p.opponent?.toLowerCase().includes(query.toLowerCase());
+  const fetchPlayers = async (name = '', team = '') => {
+    try {
+      const params = new URLSearchParams();
+      if (name) params.append('name', name);
+      if (team) params.append('team', team);
 
-      const matchesTeam = selectedTeam === '' || p.team === selectedTeam;
+      const res = await fetch(`https://morabets-backend.onrender.com/api/players?${params}`);
+      const data = await res.json();
+      setPlayers(data);
+    } catch (err) {
+      console.error('Failed to fetch props:', err);
+    }
+  };
 
-      return matchesQuery && matchesTeam;
-    })
-    .map(p => {
-      const props = onlyHighProb
-        ? p.props.filter(prop => prop.probability >= 0.6)
-        : p.props;
-
-      return { ...p, props };
-    })
-    .filter(p => p.props.length > 0);
+  const filteredPlayers = players.filter((p) =>
+    (query === '' || p.player.toLowerCase().includes(query.toLowerCase())) &&
+    (selectedTeam === '' || p.team === selectedTeam)
+  );
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <h1 className="text-4xl font-bold mb-6 text-center">Mora Bets - Today's Props</h1>
 
-      {/* Search & Filters */}
+      {/* Search + Filters */}
       <SearchBar
-        value={query}
-        onChange={setQuery}
-        suggestions={players}
+        query={query}
+        setQuery={setQuery}
         selectedTeam={selectedTeam}
-        onTeamChange={setSelectedTeam}
+        setSelectedTeam={setSelectedTeam}
+        onSearch={fetchPlayers}
       />
 
-      <div className="max-w-md mx-auto mb-6 text-sm flex items-center justify-center gap-3">
-        <label className="flex items-center space-x-2">
+      {/* Checkbox */}
+      <div className="flex justify-center mb-6">
+        <label className="flex items-center space-x-2 text-sm">
           <input
             type="checkbox"
-            checked={onlyHighProb}
-            onChange={() => setOnlyHighProb(prev => !prev)}
-            className="accent-green-500"
+            checked={show60Plus}
+            onChange={(e) => setShow60Plus(e.target.checked)}
+            className="form-checkbox h-4 w-4 text-green-500"
           />
           <span>Only show props above 60%</span>
         </label>
       </div>
 
-      {/* Player Props Grid */}
+      {/* Props */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredPlayers.map((player, idx) => (
           <div key={idx} className="bg-gray-800 p-4 rounded shadow">
@@ -81,17 +78,19 @@ export default function App() {
               Game: {new Date(player.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </div>
             <div className="space-y-2">
-              {player.props.map((prop, i) => (
-                <div key={i} className="bg-gray-700 p-3 rounded flex justify-between">
-                  <div>
-                    <div className="text-sm">{prop.stat}</div>
-                    <div className="text-xs text-gray-400">Line: {prop.line}</div>
+              {player.props
+                .filter((prop) => !show60Plus || prop.probability >= 0.6)
+                .map((prop, i) => (
+                  <div key={i} className="bg-gray-700 p-3 rounded flex justify-between">
+                    <div>
+                      <div className="text-sm">{prop.stat}</div>
+                      <div className="text-xs text-gray-400">Line: {prop.line}</div>
+                    </div>
+                    <div className="text-green-400 font-semibold">
+                      {Math.round(prop.probability * 100)}%
+                    </div>
                   </div>
-                  <div className="text-green-400 font-semibold">
-                    {Math.round(prop.probability * 100)}%
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         ))}
