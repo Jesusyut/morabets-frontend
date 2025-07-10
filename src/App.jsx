@@ -1,8 +1,11 @@
- import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import SearchBar from './components/SearchBar';
 
 export default function App() {
   const [players, setPlayers] = useState([]);
   const [filter, setFilter] = useState('');
+  const [teamFilter, setTeamFilter] = useState('');
+  const [opponentFilter, setOpponentFilter] = useState('');
 
   useEffect(() => {
     fetch('https://morabets-backend.onrender.com/api/players')
@@ -10,23 +13,45 @@ export default function App() {
       .then(data => setPlayers(data));
   }, []);
 
+  const uniqueTeams = [...new Set(players.map(p => p.team).filter(Boolean))].sort();
+  const uniqueOpponents = [...new Set(players.map(p => p.opponent).filter(Boolean))].sort();
+
   const filteredPlayers = players.filter(p =>
-    p.player.toLowerCase().includes(filter.toLowerCase()) ||
-    p.team?.toLowerCase().includes(filter.toLowerCase()) ||
-    p.opponent?.toLowerCase().includes(filter.toLowerCase())
+    (p.player.toLowerCase().includes(filter.toLowerCase()) ||
+     p.team?.toLowerCase().includes(filter.toLowerCase()) ||
+     p.opponent?.toLowerCase().includes(filter.toLowerCase())) &&
+    (teamFilter === '' || p.team === teamFilter) &&
+    (opponentFilter === '' || p.opponent === opponentFilter)
   );
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <h1 className="text-4xl font-bold mb-6 text-center">Mora Bets - Today's Props</h1>
 
-      <div className="mb-6 max-w-md mx-auto">
-        <input
-          className="w-full p-3 rounded bg-gray-800 border border-gray-700 text-white"
-          placeholder="Search player, team, or opponent..."
-          value={filter}
-          onChange={e => setFilter(e.target.value)}
-        />
+      <SearchBar value={filter} onChange={setFilter} suggestions={players} />
+
+      <div className="flex flex-col md:flex-row gap-4 mb-6 justify-center">
+        <select
+          className="bg-gray-800 border border-gray-700 text-white p-2 rounded"
+          value={teamFilter}
+          onChange={(e) => setTeamFilter(e.target.value)}
+        >
+          <option value="">All Teams</option>
+          {uniqueTeams.map((team, idx) => (
+            <option key={idx} value={team}>{team}</option>
+          ))}
+        </select>
+
+        <select
+          className="bg-gray-800 border border-gray-700 text-white p-2 rounded"
+          value={opponentFilter}
+          onChange={(e) => setOpponentFilter(e.target.value)}
+        >
+          <option value="">All Opponents</option>
+          {uniqueOpponents.map((opp, idx) => (
+            <option key={idx} value={opp}>{opp}</option>
+          ))}
+        </select>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -45,7 +70,9 @@ export default function App() {
                 <div className="text-sm text-gray-400">{player.team} vs {player.opponent}</div>
               </div>
             </div>
-            <div className="text-sm text-gray-400 mb-2">Game: {new Date(player.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+            <div className="text-sm text-gray-400 mb-2">
+              Game: {new Date(player.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+            </div>
             <div className="space-y-2">
               {player.props.map((prop, i) => (
                 <div key={i} className="bg-gray-700 p-3 rounded flex justify-between">
@@ -63,4 +90,3 @@ export default function App() {
     </div>
   );
 }
-
