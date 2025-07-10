@@ -4,7 +4,7 @@ export default function App() {
   const [picks, setPicks] = useState([]);
 
   useEffect(() => {
-    fetch('https://your-backend.onrender.com/api/today-picks') // replace with actual URL
+    fetch('https://morabets-backend.onrender.com/api/players')
       .then(res => res.json())
       .then(data => setPicks(data));
   }, []);
