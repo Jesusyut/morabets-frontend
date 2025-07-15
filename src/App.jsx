@@ -5,7 +5,6 @@ function App() {
   const [activeTab, setActiveTab] = useState("matchups");
   const [matchups, setMatchups] = useState([]);
   const [props, setProps] = useState([]);
-  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (activeTab === "matchups") {
@@ -19,14 +18,6 @@ function App() {
     }
   }, [activeTab]);
 
-  const filteredMatchups = matchups.filter((game) =>
-    game.matchup.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const filteredProps = props.filter((p) =>
-    p.player.toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
     <div className="bg-black min-h-screen text-white p-6">
       <h1 className="text-3xl font-bold text-yellow-400 mb-4">
@@ -38,7 +29,7 @@ function App() {
           : "Props + Stats"}
       </h1>
 
-      <div className="mb-4 flex gap-2">
+      <div className="mb-6 flex gap-2">
         <button
           onClick={() => setActiveTab("matchups")}
           className={`px-4 py-2 rounded ${
@@ -71,17 +62,9 @@ function App() {
         </button>
       </div>
 
-      <input
-        type="text"
-        placeholder="Search player or team..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="mb-6 w-full p-2 rounded text-black"
-      />
-
       {activeTab === "matchups" ? (
         <div className="grid gap-4">
-          {filteredMatchups.map((game, idx) => (
+          {matchups.map((game, idx) => (
             <div
               key={idx}
               className="bg-slate-900 p-4 rounded border border-yellow-400"
@@ -106,7 +89,7 @@ function App() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {filteredProps.map((prop, index) => (
+          {props.map((prop, index) => (
             <div
               key={index}
               className="bg-slate-900 p-4 rounded border border-yellow-400"
@@ -138,4 +121,3 @@ function App() {
 }
 
 export default App;
-
