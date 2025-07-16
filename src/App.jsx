@@ -5,18 +5,27 @@ function App() {
   const [activeTab, setActiveTab] = useState("matchups");
   const [matchups, setMatchups] = useState([]);
   const [props, setProps] = useState([]);
+  const [category, setCategory] = useState("all");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (activeTab === "matchups") {
       fetch("https://morabets-backend.onrender.com/matchups")
         .then((res) => res.json())
         .then((data) => setMatchups(data));
-    } else if (activeTab === "player_props" || activeTab === "props_stats") {
-      fetch("https://morabets-backend.onrender.com/player_props")
+    } else {
+      const catParam = category !== "all" ? `?category=${category}` : "";
+      fetch(`https://morabets-backend.onrender.com/player_props${catParam}`)
         .then((res) => res.json())
         .then((data) => setProps(data));
     }
-  }, [activeTab]);
+  }, [activeTab, category]);
+
+  const filteredProps = props.filter((p) =>
+    p.player.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const categories = ["all", "hits", "batter_total_bases", "batter_home_runs", "Fantasy Points"];
 
   return (
     <div className="bg-black min-h-screen text-white p-6">
@@ -29,7 +38,7 @@ function App() {
           : "Props + Stats"}
       </h1>
 
-      <div className="mb-6 flex gap-2">
+      <div className="mb-6 flex flex-wrap gap-2">
         <button
           onClick={() => setActiveTab("matchups")}
           className={`px-4 py-2 rounded ${
@@ -60,6 +69,30 @@ function App() {
         >
           Props + Stats
         </button>
+
+        {activeTab !== "matchups" && (
+          <>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="bg-slate-800 border border-yellow-400 text-white px-3 py-2 rounded"
+            >
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="text"
+              placeholder="Search player..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="bg-slate-800 px-3 py-2 rounded border border-yellow-400 text-white"
+            />
+          </>
+        )}
       </div>
 
       {activeTab === "matchups" ? (
@@ -89,7 +122,7 @@ function App() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {props.map((prop, index) => (
+          {filteredProps.map((prop, index) => (
             <div
               key={index}
               className="bg-slate-900 p-4 rounded border border-yellow-400"
@@ -103,6 +136,19 @@ function App() {
               <p className="text-green-400">
                 Probability: {prop.implied_probability}%
               </p>
+
+              {prop.fantasy?.fp_hit_rate !== undefined && (
+                <p className="text-blue-400">
+                  🎯 Fantasy Hit Rate (L10): {(prop.fantasy.fp_hit_rate * 100).toFixed(0)}%
+                </p>
+              )}
+
+              {prop.contextual?.hit_rate !== undefined && (
+                <p className="text-purple-400">
+                  📊 Contextual Hit Rate: {(prop.contextual.hit_rate * 100).toFixed(0)}%
+                </p>
+              )}
+
               {activeTab === "props_stats" && prop.stats && (
                 <div className="mt-2 text-sm text-gray-300">
                   <p>Hits: {prop.stats.hits}</p>
@@ -121,3 +167,4 @@ function App() {
 }
 
 export default App;
+
