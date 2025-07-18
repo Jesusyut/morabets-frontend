@@ -17,7 +17,24 @@ function App() {
       const catParam = category !== "all" ? `?category=${category}` : "";
       fetch(`https://morabets-backend.onrender.com/player_props${catParam}`)
         .then((res) => res.json())
-        .then((data) => setProps(data));
+        .then(async (data) => {
+          const enriched = await Promise.all(
+            data.map(async (prop) => {
+              try {
+                const res = await fetch(
+                  `https://morabets-backend.onrender.com/contextual_props?player=${encodeURIComponent(
+                    prop.player
+                  )}&stat=${prop.stat}&threshold=${prop.line}`
+                );
+                const ctx = await res.json();
+                return { ...prop, contextual: ctx };
+              } catch (err) {
+                return { ...prop, contextual: { hit_rate: null } };
+              }
+            })
+          );
+          setProps(enriched);
+        });
     }
   }, [activeTab, category]);
 
@@ -167,4 +184,3 @@ function App() {
 }
 
 export default App;
-
