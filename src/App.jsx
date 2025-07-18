@@ -21,14 +21,16 @@ function App() {
           const enriched = await Promise.all(
             data.map(async (prop) => {
               try {
+                const threshold = parseFloat(prop.line?.split(" ")[1]);
                 const res = await fetch(
                   `https://morabets-backend.onrender.com/contextual_props?player=${encodeURIComponent(
                     prop.player
-                  )}&stat=${prop.stat}&threshold=${prop.line}`
+                  )}&stat=${prop.stat}&threshold=${threshold}`
                 );
                 const ctx = await res.json();
                 return { ...prop, contextual: ctx };
               } catch (err) {
+                console.warn("Failed to fetch contextual for:", prop.player);
                 return { ...prop, contextual: { hit_rate: null } };
               }
             })
